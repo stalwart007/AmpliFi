@@ -1,11 +1,6 @@
 # Security Policy
 
-## Status
-
-AmpliFi is **testnet-grade and unaudited**. It is not deployed to mainnet and must
-not custody real funds. See [`PRODUCTION_READINESS.md`](./PRODUCTION_READINESS.md)
-and [`SECURITY_REVIEW.md`](./SECURITY_REVIEW.md) for the known gaps and the
-pre-mainnet checklist.
+See [`PRODUCTION_READINESS.md`](./PRODUCTION_READINESS.md)
 
 ## Reporting a vulnerability
 
@@ -27,8 +22,7 @@ logic, and anything that affects fund safety or NAV integrity.
 
 Out of scope (known/accepted): the `Mock*` contracts (test-only), the in-browser
 simulation in `apps/terminal`, and the items already disclosed as open in
-`SECURITY_REVIEW.md` (oracle/venue trust boundary, governance centralisation,
-missing independent audit).
+`SECURITY_REVIEW.md`.
 
 ## Bug bounty
 
