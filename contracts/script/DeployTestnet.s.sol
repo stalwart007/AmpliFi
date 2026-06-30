@@ -30,7 +30,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  *         it requires (1) an independent audit, (2) the REAL Panoptic
  *         PanopticPool + CollateralTracker bound behind `IPanopticPool` instead
  *         of `MockPanopticPool`, (3) the real USDC, and (4) GOVERNOR handed to
- *         the timelock + multisig. See PRODUCTION_READINESS.md and DEPLOY.md.
+ *         the timelock + multisig. See the README.
  *
  *         Usage (Base Sepolia):
  *           forge script script/DeployTestnet.s.sol:DeployTestnet \

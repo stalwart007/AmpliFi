@@ -6,7 +6,7 @@ leveraged, capped-downside exposure through an external options venue.
 > **Status: production-grade Solidity, audit-pending.** Compiles clean against
 > OpenZeppelin 5.1 (`solc 0.8.24`); behavioural + fuzz tests in `test/`.
 > Independent audit and a live-venue adapter are required before mainnet custody
-> of real funds — see [`../PRODUCTION_READINESS.md`](../PRODUCTION_READINESS.md).
+> of real funds.
 
 ## Contracts
 
@@ -52,8 +52,7 @@ forge script script/DeployDemo.s.sol --rpc-url $SEPOLIA_RPC --broadcast
 Role-separated control (GOVERNOR sets policy, KEEPER pokes NAV/harvests, ADMIN
 manages roles); reentrancy-guarded asset moves; emergency pause; deposit halt
 latched on wind-down (redemptions stay open); performance fee hard-capped at 20%.
-The full pre-mainnet checklist is in
-[`../PRODUCTION_READINESS.md`](../PRODUCTION_READINESS.md).
+Independent audit + live-venue integration are required before mainnet.
 
 ## License
 

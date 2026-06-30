@@ -27,7 +27,7 @@ import {IPanopticPool} from "../interfaces/IPanopticPool.sol";
  *
  *         AUDIT STATUS: written to production standards and compiles clean, but
  *         the live Panoptic binding + the independent audit are required before
- *         real-fund custody. See PRODUCTION_READINESS.md.
+ *         real-fund custody.
  */
 contract PanopticVenueAdapter is IOptionsVenue, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;

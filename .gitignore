@@ -37,6 +37,6 @@ yarn-error.log*
 out/
 cache/
 broadcast/
-# vendored libs (re-created via `git clone` — see DEPLOY.md). Match at any depth.
+# vendored libs (re-created via `git clone` — see the README). Match at any depth.
 lib/
 contracts/lib/

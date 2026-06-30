@@ -1,7 +1,7 @@
 # Infrastructure
 
 Reference deployment assets for the AmpliFi off-chain services. **Testnet /
-staging only** — see `PRODUCTION_READINESS.md`.
+staging only** (unaudited).
 
 ## Layout
 

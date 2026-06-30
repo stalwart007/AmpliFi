@@ -12,8 +12,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 /**
  * @notice Testnet deployment wiring (Sepolia). Deploys the mock USDC + mock
  *         venue and the full vault stack. For mainnet, swap `MockOptionsVenue`
- *         for the audited live-venue adapter and pass the real USDC address —
- *         see PRODUCTION_READINESS.md.
+ *         for the audited live-venue adapter and pass the real USDC address.
  *
  *         Usage:
  *           forge script script/DeployDemo.s.sol --rpc-url $SEPOLIA_RPC \

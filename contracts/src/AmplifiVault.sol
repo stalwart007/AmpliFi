@@ -36,7 +36,7 @@ import {RiskController} from "./RiskController.sol";
  *
  *         AUDIT STATUS: this contract is written to production standards and
  *         compiles clean, but mainnet custody of real funds requires an
- *         independent audit and a live venue adapter. See PRODUCTION_READINESS.md.
+ *         independent audit and a live venue adapter.
  */
 contract AmplifiVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;

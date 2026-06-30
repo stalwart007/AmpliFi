@@ -32,8 +32,8 @@ import {IAllowlistGate} from "../interfaces/IAllowlistGate.sol";
  *         Entries may carry an expiry; expired entries fail closed.
  *
  * @dev    AUDIT STATUS: written to production standards and compiles clean, but
- *         not independently audited. See PRODUCTION_READINESS.md. The gate is the
- *         real boundary — any UI allowlist is convenience only.
+ *         not independently audited. The gate is the real boundary — any UI
+ *         allowlist is convenience only.
  */
 contract AllowlistGate is IAllowlistGate, AccessControl, Pausable, EIP712 {
     bytes32 public constant GATEKEEPER_ROLE = keccak256("GATEKEEPER_ROLE");

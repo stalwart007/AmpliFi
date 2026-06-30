@@ -1,4 +1,4 @@
-# AmpliFi reference services. Testnet/dev only — unaudited; see PRODUCTION_READINESS.md.
+# AmpliFi reference services. Testnet/dev only — unaudited.
 #   docker compose up --build
 # Set AMPLIFI_API_KEYS to enable API-key auth (comma-separated); leave empty for open dev.
 services:
