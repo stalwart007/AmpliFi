@@ -14,11 +14,6 @@ parameters that govern the contracts are computed by the _same_ tested code.
 [![status](https://img.shields.io/badge/status-testnet--grade%20·%20audit%20pending-orange)](./PRODUCTION_READINESS.md)
 [![types](https://img.shields.io/badge/TypeScript-strict-blue)](#)
 
-> **Maturity, stated plainly:** this is a **testnet-grade research protocol**, not
-> a production system. The contracts are **unaudited**, NAV is currently sourced
-> from a **mock options venue** (the real Panoptic binding is a reference adapter,
-> not yet wired to live pools), and the services are **reference implementations**.
-> Do not custody real funds. See [`PRODUCTION_READINESS.md`](./PRODUCTION_READINESS.md).
 
 ## Component status (read this first)
 
