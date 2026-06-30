@@ -5,6 +5,8 @@ import {Script} from "forge-std/Script.sol";
 import {AmplifiGatedVault} from "../src/AmplifiGatedVault.sol";
 import {RiskController} from "../src/RiskController.sol";
 import {AllowlistGate} from "../src/access/AllowlistGate.sol";
+import {AmplifiTimelock} from "../src/governance/AmplifiTimelock.sol";
+import {MultisigGuardian} from "../src/governance/MultisigGuardian.sol";
 import {PanopticVenueAdapter} from "../src/venues/PanopticVenueAdapter.sol";
 import {MockPanopticPool} from "../src/mocks/MockPanopticPool.sol";
 import {MockOptionsVenue} from "../src/mocks/MockOptionsVenue.sol";
@@ -80,6 +82,43 @@ contract DeployTestnet is Script {
         // 5. Allowlist the operators so they can deposit through the gate.
         gate.setAllowed(governor, true, 0);
         if (keeper != governor) gate.setAllowed(keeper, true, 0);
+
+        // 6. Decentralise governance BY DEFAULT: deploy a multisig guardian +
+        //    timelock and hand the vault's & RiskController's GOVERNOR/admin roles
+        //    to the timelock, then drop the deployer's privileges. Set
+        //    DECENTRALIZE=false to keep EOA governance for local iteration.
+        //    (Done last, after all GOVERNOR-gated setup above, so the deployer
+        //    still has the rights it needs while wiring.)
+        if (vm.envOr("DECENTRALIZE", true)) {
+            uint256 minDelay = vm.envOr("TIMELOCK_DELAY", uint256(2 days));
+
+            address[] memory owners = new address[](1);
+            owners[0] = governor; // mainnet: pass a real m-of-n owner set
+            MultisigGuardian guardian = new MultisigGuardian(owners, 1);
+
+            address[] memory proposers = new address[](1);
+            proposers[0] = address(guardian);
+            address[] memory executors = new address[](1);
+            executors[0] = address(guardian);
+            AmplifiTimelock timelock = new AmplifiTimelock(minDelay, proposers, executors, address(0));
+
+            // Vault: timelock becomes GOVERNOR + admin; deployer steps down.
+            vault.grantRole(vault.GOVERNOR_ROLE(), address(timelock));
+            vault.grantRole(vault.DEFAULT_ADMIN_ROLE(), address(timelock));
+            vault.revokeRole(vault.GOVERNOR_ROLE(), governor);
+
+            // RiskController: same handoff.
+            risk.grantRole(risk.GOVERNOR_ROLE(), address(timelock));
+            risk.grantRole(risk.DEFAULT_ADMIN_ROLE(), address(timelock));
+            risk.revokeRole(risk.GOVERNOR_ROLE(), governor);
+
+            // Finally renounce the deployer's admin on both (must be last).
+            vault.renounceRole(vault.DEFAULT_ADMIN_ROLE(), governor);
+            risk.renounceRole(risk.DEFAULT_ADMIN_ROLE(), governor);
+
+            guardian;
+            timelock;
+        }
 
         vm.stopBroadcast();
 

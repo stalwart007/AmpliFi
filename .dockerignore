@@ -1,0 +1,11 @@
+node_modules
+**/node_modules
+**/dist
+**/out
+**/cache
+**/broadcast
+contracts/lib
+.git
+.github
+**/*.timestamp-*.mjs
+apps/terminal/dist

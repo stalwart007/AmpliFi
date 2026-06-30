@@ -1,5 +1,5 @@
 /* risk-engine HTTP: POST /evaluate a book + limits → a RiskReport (pull model). */
-import { createJsonServer, asObject, num, strArray, numMatrix, child, ok, type Handler, type Ctx, type Reply } from "@amplifi/svc-kit";
+import { createJsonServer, securityFromEnv, asObject, num, strArray, numMatrix, child, ok, type Handler, type Ctx, type Reply } from "@amplifi/svc-kit";
 import { evaluate, type Book, type RiskLimits } from "./monitor";
 import type { Leg } from "@amplifi/quant-core";
 
@@ -62,5 +62,6 @@ export function buildServer(allowOrigins?: string[]) {
       "POST /evaluate": evaluateHandler,
     },
     allowOrigins,
+    ...securityFromEnv(),
   });
 }

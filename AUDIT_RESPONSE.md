@@ -38,17 +38,25 @@ and no share over-issuance (capped-downside). Addresses "no invariant/fuzz tests
 - **Build junk committed** (`vite.config.ts.timestamp-*.mjs`) — **Fixed.**
   Gitignored; remove from history with the `git rm` in the PR/commit.
 - **Nested `packages/quant-core/package-lock.json`** — **Fixed.** Removed.
-- **Packages don't emit JS/d.ts** — **Deferred.** Tracked; changing
-  `main`/`types` to `dist` must not break the Vite/tsx source-consumption path,
-  so it's a careful follow-up rather than a blind change.
+- **Packages don't emit JS/d.ts** — **Fixed.** `npm run build` now emits JS +
+  `.d.ts` to `dist/` for all six packages (`tsconfig.build.json`), and
+  `publishConfig` points the published `main`/`types`/`exports` at `dist`. The
+  in-repo dev/test path still resolves `src`, so nothing breaks.
 
 ## Services & ops
 
-- **No auth/rate-limit/logging; no Dockerfiles** — **Deferred.** Next batch
-  (svc-kit middleware + Dockerfiles). Documented as reference services in the
-  README status table.
+- **No auth/rate-limit/logging; no Dockerfiles** — **Fixed.** `svc-kit` gained
+  optional API-key auth, per-IP rate limiting, and JSON access logging
+  (`securityFromEnv()`, env-driven, off by default for dev); `pricing-api` and
+  `risk-engine` are wired to it. Added a Dockerfile per service + a
+  `docker-compose.yml` (non-root, healthchecks).
 - **Keeper has no live chain client** — **Deferred.** The viem provider is a
-  reference stub; wiring it to the deployed testnet vault is the planned follow-up.
+  reference stub; wiring it to the deployed testnet vault is the planned
+  follow-up (needs the live contract addresses first).
+- **Governance centralised by default** — **Fixed.** `DeployTestnet` now deploys
+  the multisig + timelock and hands the vault's & RiskController's GOVERNOR/admin
+  roles to the timelock, dropping the deployer's privileges, by default
+  (`DECENTRALIZE=false` to opt out for local iteration).
 
 ## Repo hygiene & process
 
@@ -56,8 +64,10 @@ and no share over-issuance (capped-downside). Addresses "no invariant/fuzz tests
   All added.
 - **Lint covered only `packages/`** — **Fixed.** Now `packages services apps`;
   `no-explicit-any` raised from `off` to `warn` (surfaced, not silenced).
-- **No `npm audit` in CI** — **Fixed.** Added (advisory). CI Foundry job fixed to
-  vendor forge-std + OZ correctly.
+- **No `npm audit` in CI** — **Fixed.** Critical-severity vulns now **fail** CI
+  (hard gate); high/moderate are advisory. (The current highs are transitive in
+  the WalletConnect/Reown wallet-UI deps, fixable only upstream — gating on them
+  would be permanent red noise.) CI Foundry job also fixed to vendor forge-std + OZ.
 - **License contradiction** — **Fixed.** LICENSE clarifies the repo is public for
   transparency but source-available/proprietary (consistent with `UNLICENSED`).
 - **Single squashed commit / bus factor 1** — **External.** Process/people, not a

@@ -26,8 +26,11 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Dependency audit (advisory)
-        run: npm audit --audit-level=high || true
+      - name: Dependency audit (critical = hard gate)
+        run: npm audit --audit-level=critical
+
+      - name: Dependency audit (high/moderate = advisory)
+        run: npm audit --audit-level=moderate || true
 
       - name: Numerical + property verification (incl. solc compile)
         run: npm test

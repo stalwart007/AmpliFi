@@ -4,7 +4,7 @@
  * Wires the pure handlers to routes on the shared JSON HTTP server.
  * ===========================================================================*/
 
-import { createJsonServer, type Handler } from "@amplifi/svc-kit";
+import { createJsonServer, securityFromEnv, type Handler } from "@amplifi/svc-kit";
 import { healthHandler, priceHandler, ivHandler, surfaceHandler, varHandler } from "./handlers";
 
 export const routes: Record<string, Handler> = {
@@ -16,5 +16,7 @@ export const routes: Record<string, Handler> = {
 };
 
 export function buildServer(allowOrigins?: string[]) {
-  return createJsonServer({ routes, allowOrigins });
+  // securityFromEnv() wires API-key auth + rate limiting + access logging when
+  // the corresponding env vars are set; off by default for local dev/tests.
+  return createJsonServer({ routes, allowOrigins, ...securityFromEnv() });
 }
