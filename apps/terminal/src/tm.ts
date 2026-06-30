@@ -409,10 +409,11 @@ export function useTimeMachine() {
   // (re)initialise only when a structural field changes — NOT on speed, which
   // only affects the tick interval and must never reset a running simulation.
   const resetKey = `${config.deposit}|${config.costBps}|${config.useErc}|${config.jumps}|${config.drift}|${config.active.join(",")}`;
+  // Intentionally keyed on `resetKey` only (not `reset`/`config`): structural
+  // fields trigger re-init; speed changes must not.
   useEffect(() => {
     reset(config);
     setRunning(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey]);
 
   // stepping loop.
