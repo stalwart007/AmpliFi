@@ -1,0 +1,7 @@
+# Default owner for everything in the repo.
+* @stalwart007
+
+# Security-sensitive areas warrant explicit review.
+/contracts/        @stalwart007
+/services/keeper/  @stalwart007
+SECURITY.md        @stalwart007

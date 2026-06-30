@@ -10,42 +10,50 @@ truth — a deterministic, dependency-free quant core that every other layer
 consumes — so the numbers a user sees, the risk a keeper enforces, and the
 parameters that govern the contracts are computed by the _same_ tested code.
 
-[![ci](https://img.shields.io/badge/ci-typecheck%20%2B%20verify-brightgreen)](./.github/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-206%20passing-brightgreen)](#testing--verification)
+[![ci](https://img.shields.io/badge/ci-typecheck%20%2B%20verify-blue)](./.github/workflows/ci.yml)
+[![status](https://img.shields.io/badge/status-testnet--grade%20·%20audit%20pending-orange)](./PRODUCTION_READINESS.md)
 [![types](https://img.shields.io/badge/TypeScript-strict-blue)](#)
+
+> **Maturity, stated plainly:** this is a **testnet-grade research protocol**, not
+> a production system. The contracts are **unaudited**, NAV is currently sourced
+> from a **mock options venue** (the real Panoptic binding is a reference adapter,
+> not yet wired to live pools), and the services are **reference implementations**.
+> Do not custody real funds. See [`PRODUCTION_READINESS.md`](./PRODUCTION_READINESS.md).
 
 ## Component status (read this first)
 
-Every component states plainly how far it has been taken. This is a feature: it
-is exactly the maturity table an auditor or integrator expects to see.
+Every component states plainly how far it has been taken. Run `npm test` for the
+live, self-reported check counts per package (the suite is the source of truth;
+this table deliberately avoids hard-coding numbers that drift).
 
-| Component                    | What it is                                                            | Status                                                                                                 |
-| ---------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `packages/quant-core`        | BSM · binomial/American · barrier · Heston · exotics · IV · SVI · VaR | ✅ **Production-grade library** — 56 numerical checks, strict types                                    |
-| `packages/strategy-core`     | ERC basket, hedge, epoch, costs, jump stress, analytics               | ✅ **Production-grade library** — 36 property tests, deterministic                                     |
-| `packages/svc-kit`           | Shared HTTP server + input validation + structured logging            | ✅ **Production-grade library** — 17 checks                                                            |
-| `packages/market-data`       | Feed adapters (synthetic + replay), CSV, vol/covariance est.          | ✅ **Production-grade library** — 14 checks                                                            |
-| `packages/protocol-bindings` | Typed ABIs + provider-abstracted `VaultClient` (viem-ready)           | ✅ **Production-grade library** — 13 checks                                                            |
-| `packages/portfolio-opt`     | Mean-variance · max-Sharpe · risk-budgeting/ERC · Black–Litterman     | ✅ **Production-grade library** — 15 checks (optimality-verified)                                      |
-| `apps/research`              | Backtest + scenario harness, parameter sweeps, perf reports           | ✅ **Working app** — 10 checks, CLI tables                                                             |
-| `services/pricing-api`       | HTTP: greeks / IV / SVI surface / Monte-Carlo VaR                     | ✅ **Runnable service** — 7 end-to-end HTTP tests                                                      |
-| `services/risk-engine`       | Scheduled VaR/ES + risk-limit breach detection + alerts               | ✅ **Runnable service** — 12 tests (monitor, scheduler, HTTP)                                          |
-| `services/keeper`            | Off-chain agent driving the strategy through a chain client           | ✅ **Runnable service** — 11 tests (bootstrap, NAV sync, wind-down)                                    |
-| `contracts/`                 | Vault · RiskController · Timelock · Multisig · WithdrawalQueue        | 🟡 **Production-grade code** — compiles vs OZ 5.1, Foundry suite; **independent audit before mainnet** |
-| `apps/terminal`              | Live React dashboard driving the real engine                          | ✅ **Working app** — Vite build clean, runtime smoke-tested                                            |
+| Component                    | What it is                                                            | Status                                                                                |
+| ---------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `packages/quant-core`        | BSM · binomial/American · barrier · Heston · exotics · IV · SVI · VaR | TS library — deterministic, strict types, tested via `npm test`                        |
+| `packages/strategy-core`     | ERC basket, hedge, epoch, costs, jump stress, analytics               | TS library — deterministic property tests                                              |
+| `packages/svc-kit`           | Shared HTTP server + input validation + structured logging            | TS library — tested                                                                    |
+| `packages/market-data`       | Feed adapters (synthetic + replay), CSV, vol/covariance est.          | TS library — tested                                                                    |
+| `packages/protocol-bindings` | Typed ABIs + provider-abstracted `VaultClient`                        | TS library — in-memory provider; viem provider is a reference stub                     |
+| `packages/portfolio-opt`     | Mean-variance · max-Sharpe · risk-budgeting/ERC · Black–Litterman     | TS library — optimality-checked                                                        |
+| `apps/research`              | Backtest + scenario harness, parameter sweeps, perf reports           | Working CLI app                                                                        |
+| `services/pricing-api`       | HTTP: greeks / IV / SVI surface / Monte-Carlo VaR                     | Reference service — **no auth/rate-limit/TLS yet**                                     |
+| `services/risk-engine`       | Scheduled VaR/ES + risk-limit breach detection + alerts               | Reference service — **no auth/rate-limit/TLS yet**                                     |
+| `services/keeper`            | Off-chain agent driving the strategy                                  | Reference service — drives the **in-memory engine**; live chain client pending         |
+| `contracts/`                 | Gated vault · RiskController · AllowlistGate · Panoptic adapter · gov  | 🟠 **Unaudited.** Compiles vs OZ 5.1, Foundry suite passes; NAV from a **mock venue**  |
+| `apps/terminal`              | React dashboard driving the real TS engine in-browser                 | Working app — in-browser simulation (no live transactions yet)                         |
 
-The quant and strategy **libraries are production-grade software** and ready to
-depend on. The **on-chain protocol is engineered to production standards** —
-role-based access control, reentrancy guards, pausability, deposit caps, a
-portfolio-level `RiskController`, and a clean `IOptionsVenue` integration seam so
-the vault never fabricates returns (its NAV is `idle reserve + venue mark`).
+The quant/strategy **TS libraries are the most mature part** and are tested and
+deterministic. The **on-chain protocol is written to production standards**
+(role-based access control, reentrancy guards, pausability, deposit caps, a
+portfolio-level `RiskController`, a hardened `setVenue` + slippage floor, and a
+clean `IOptionsVenue` seam so the vault never fabricates returns) **but it is not
+production-ready**: it is unaudited and its returns engine is a mock.
 
-One gate remains before the protocol custodies real funds on mainnet: an
-**independent security audit** and binding a **live, audited options-venue
-adapter**. No amount of in-house testing substitutes for that audit — it is the
-single industry-standard step between "production-grade code" and "live with real
-money." Until then, run it on testnet. See
-[`PRODUCTION_READINESS.md`](./PRODUCTION_READINESS.md) for the exact checklist.
+Before this could custody real funds on mainnet, all of the following must be
+true: an **independent security audit** (remediated), a **live audited
+options-venue adapter** bound in place of the mock (the real Panoptic
+`PanopticPool`/`CollateralTracker`), governance behind the timelock + multisig,
+and a monitored keeper. No amount of in-house testing substitutes for the audit.
+Until then, testnet only. See [`PRODUCTION_READINESS.md`](./PRODUCTION_READINESS.md).
 
 ## Repository layout
 
@@ -197,15 +205,18 @@ risk-budgeting/ERC (risk contributions match the budget exactly), and
 Black–Litterman (no-views identity + a view tilts the right asset) — all built on
 quant-core's new SPD Cholesky solver.
 
-**Total: 193 TS checks + the Solidity compile + the Foundry suite.**
+Run `npm test` for the current totals (the suite self-reports per package) plus
+the Solidity compile, and `forge test` in `contracts/` for the on-chain suite.
+The check counts above are illustrative of coverage areas, not a maintained tally.
 
 CI runs `npm run typecheck`, `npm run lint`, and `npm test` (incl. the solc
 contract compile) on every push, plus a Foundry job for the on-chain tests.
 
 ## On-chain protocol (`contracts/`)
 
-A hardened ERC-4626 vault stack written to production standards and verified to
-compile against OpenZeppelin 5.1:
+A hardened ERC-4626 vault stack written to production standards — but **unaudited,
+and currently marking NAV off a mock venue on testnet**. It compiles against
+OpenZeppelin 5.1 and the Foundry suite passes:
 
 - **`AmplifiVault`** — ERC-4626 shares (AFI). NAV = `idle reserve + venue mark`;
   the vault never invents returns. Role-based access (GOVERNOR / KEEPER / ADMIN),

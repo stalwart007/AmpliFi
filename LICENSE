@@ -15,6 +15,11 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+This repository is published publicly for transparency and review only. Public
+availability does NOT make it open-source: it remains source-available and
+proprietary (all rights reserved) under the terms above. The `UNLICENSED` SPDX
+identifier in the source files reflects this.
+
 This Software includes research-grade financial and smart-contract code that is
 unaudited. It is not financial advice and not an offer of any financial product.
 The on-chain components are intended for test networks only.

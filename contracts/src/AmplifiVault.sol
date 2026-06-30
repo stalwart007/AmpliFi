@@ -58,12 +58,32 @@ contract AmplifiVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
     uint256 public lastFeeNavWad; // HWM used for performance-fee crystallisation
     bool public depositsHalted; // latched on wind-down; redemptions stay open
 
+    /// @notice Minimum manufactured notional as a multiple of premium, in bps
+    ///         (10_000 = 1×). Threaded into `venue.openExposure` as the slippage
+    ///         floor so premium is never deployed for less than this notional.
+    uint256 public minExposureBps = 10_000;
+
+    /// @notice Minimum size of the FIRST deposit (when totalSupply == 0). Together
+    ///         with OZ v5's virtual shares/assets this neutralises the ERC-4626
+    ///         first-depositor inflation/donation attack (finding #5): the attacker
+    ///         can no longer seed the vault with dust and then skew the rate.
+    uint256 public minFirstDeposit;
+
+    /// @notice Venues that governance has explicitly approved as `setVenue`
+    ///         targets. The initial venue is trusted at construction; any later
+    ///         repoint must be allowlisted first (ideally via the timelock).
+    mapping(address => bool) public venueAllowed;
+
     error ZeroAddress();
     error BadParam();
     error CapExceeded();
     error DepositsHalted();
+    error VenueNotAllowed();
+    error AssetMismatch();
 
     event VenueUpdated(address venue);
+    event VenueAllowlisted(address venue, bool allowed);
+    event MinExposureBpsUpdated(uint256 bps);
     event TreasuryUpdated(address treasury);
     event PremiumBpsUpdated(uint256 bps);
     event PerfFeeUpdated(uint256 bps);
@@ -105,6 +125,7 @@ contract AmplifiVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
         perfFeeBps = perfFeeBps_;
         depositCap = depositCap_;
         lastFeeNavWad = 1e18;
+        minFirstDeposit = 10 ** IERC20Metadata(address(asset_)).decimals(); // ≥ 1 whole asset unit
     }
 
     // -------------------------------------------------------------------------
@@ -154,13 +175,20 @@ contract AmplifiVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
     {
         if (depositsHalted) revert DepositsHalted();
         if (depositCap != 0 && totalAssets() + assets > depositCap) revert CapExceeded();
+        // First-depositor inflation guard (finding #5): the opening deposit must
+        // be at least `minFirstDeposit`, so the vault can't be seeded with dust.
+        if (totalSupply() == 0 && assets < minFirstDeposit) revert BadParam();
 
         super._deposit(caller, receiver, assets, shares); // pulls assets, mints shares
 
         uint256 premium = assets.mulDiv(premiumBps, BPS);
         if (premium > 0) {
             IERC20(asset()).safeTransfer(address(venue), premium);
-            uint256 notional = venue.openExposure(premium, 0);
+            // Slippage floor: require the venue to manufacture at least
+            // `minExposureBps` of premium in notional, instead of accepting any
+            // amount (finding #7). A keeper can pass a tighter floor off-chain.
+            uint256 minExposure = premium.mulDiv(minExposureBps, BPS);
+            uint256 notional = venue.openExposure(premium, minExposure);
             emit PremiumDeployed(premium, notional);
         }
     }
@@ -231,10 +259,32 @@ contract AmplifiVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
     // Governance
     // -------------------------------------------------------------------------
 
+    /// @notice Governance pre-approves a venue before it can become the active
+    ///         venue. Put GOVERNOR_ROLE behind the timelock so this has a delay.
+    function allowVenue(address v, bool allowed) external onlyRole(GOVERNOR_ROLE) {
+        if (v == address(0)) revert ZeroAddress();
+        venueAllowed[v] = allowed;
+        emit VenueAllowlisted(v, allowed);
+    }
+
     function setVenue(IOptionsVenue v) external onlyRole(GOVERNOR_ROLE) {
         if (address(v) == address(0)) revert ZeroAddress();
+        // A repoint must target a pre-allowlisted venue whose settlement asset
+        // matches this vault's — closes the "repoint to a malicious venue" vector
+        // (finding #2).
+        if (!venueAllowed[address(v)]) revert VenueNotAllowed();
+        if (v.asset() != asset()) revert AssetMismatch();
         venue = v;
         emit VenueUpdated(address(v));
+    }
+
+    function setMinExposureBps(uint256 bps) external onlyRole(GOVERNOR_ROLE) {
+        minExposureBps = bps;
+        emit MinExposureBpsUpdated(bps);
+    }
+
+    function setMinFirstDeposit(uint256 amount) external onlyRole(GOVERNOR_ROLE) {
+        minFirstDeposit = amount;
     }
 
     function setTreasury(address t) external onlyRole(GOVERNOR_ROLE) {

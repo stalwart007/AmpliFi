@@ -7,6 +7,9 @@ node_modules/
 dist/
 build/
 *.tsbuildinfo
+# Vite writes these transient config-bundle files; never commit them
+vite.config.ts.timestamp-*.mjs
+*.timestamp-*.mjs
 
 # Test / coverage
 coverage/

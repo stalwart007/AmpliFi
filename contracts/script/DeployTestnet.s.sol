@@ -71,7 +71,9 @@ contract DeployTestnet is Script {
         adapter.setPositionTemplate(tokenId);
         adapter.setLeverage(leverageX);
 
-        // 4. Wire roles and repoint the vault at the Panoptic adapter.
+        // 4. Wire roles and repoint the vault at the Panoptic adapter (must be
+        //    allowlisted first under the hardened setVenue).
+        vault.allowVenue(address(adapter), true);
         vault.setVenue(IOptionsVenue(address(adapter))); // GOVERNOR-only
         risk.grantRole(risk.VAULT_ROLE(), address(vault));
 
