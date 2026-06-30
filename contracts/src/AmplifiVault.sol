@@ -91,6 +91,10 @@ contract AmplifiVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
     event PremiumDeployed(uint256 premium, uint256 notional);
     event PerformanceFee(uint256 feeAssets, uint256 feeShares, uint256 navWad);
     event WoundDown(uint256 navWad, uint256 proceeds);
+    /// @notice Emitted on every keeper NAV poke — the canonical checkpoint
+    ///         off-chain analytics/keeper reconcile against (parity with
+    ///         strategy-core's epoch marks).
+    event NavPoked(uint256 navWad, bool woundDown);
 
     constructor(
         IERC20 asset_,
@@ -229,6 +233,7 @@ contract AmplifiVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
             uint256 proceeds = venue.settle();
             emit WoundDown(navWad, proceeds);
         }
+        emit NavPoked(navWad, woundDown);
     }
 
     function _crystalliseFee(uint256 navWad) internal {

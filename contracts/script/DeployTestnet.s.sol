@@ -8,8 +8,11 @@ import {AllowlistGate} from "../src/access/AllowlistGate.sol";
 import {AmplifiTimelock} from "../src/governance/AmplifiTimelock.sol";
 import {MultisigGuardian} from "../src/governance/MultisigGuardian.sol";
 import {PanopticVenueAdapter} from "../src/venues/PanopticVenueAdapter.sol";
+import {OracleHardenedVenue} from "../src/OracleHardenedVenue.sol";
 import {MockPanopticPool} from "../src/mocks/MockPanopticPool.sol";
 import {MockOptionsVenue} from "../src/mocks/MockOptionsVenue.sol";
+import {MockPriceOracle} from "../src/mocks/MockPriceOracle.sol";
+import {IPriceOracle} from "../src/interfaces/IPriceOracle.sol";
 import {MockUSDC} from "../src/mocks/MockUSDC.sol";
 import {IOptionsVenue} from "../src/interfaces/IOptionsVenue.sol";
 import {IAllowlistGate} from "../src/interfaces/IAllowlistGate.sol";
@@ -73,10 +76,30 @@ contract DeployTestnet is Script {
         adapter.setPositionTemplate(tokenId);
         adapter.setLeverage(leverageX);
 
-        // 4. Wire roles and repoint the vault at the Panoptic adapter (must be
-        //    allowlisted first under the hardened setVenue).
-        vault.allowVenue(address(adapter), true);
-        vault.setVenue(IOptionsVenue(address(adapter))); // GOVERNOR-only
+        // 4. Wire roles and choose the active venue. Default is the Panoptic
+        //    adapter; set USE_ORACLE_VENUE=true to instead bind the
+        //    OracleHardenedVenue (staleness + deviation guards + guardian exit),
+        //    demonstrating the oracle-hardened mark path end-to-end.
+        if (vm.envOr("USE_ORACLE_VENUE", false)) {
+            MockPriceOracle oracle = new MockPriceOracle(2000e8, 8); // testnet feed
+            OracleHardenedVenue ohv = new OracleHardenedVenue(
+                address(usdc),
+                IPriceOracle(address(oracle)),
+                governor,
+                address(vault),
+                governor, // guardian (emergency pause/exit)
+                leverageX,
+                1 hours, // maxStaleness
+                500 // maxDeviationBps (5%)
+            );
+            vault.allowVenue(address(ohv), true);
+            vault.setVenue(IOptionsVenue(address(ohv)));
+            oracle;
+            ohv;
+        } else {
+            vault.allowVenue(address(adapter), true);
+            vault.setVenue(IOptionsVenue(address(adapter))); // GOVERNOR-only
+        }
         risk.grantRole(risk.VAULT_ROLE(), address(vault));
 
         // 5. Allowlist the operators so they can deposit through the gate.

@@ -1,0 +1,26 @@
+# Caddy reverse proxy — automatic HTTPS (Let's Encrypt) + HSTS in front of the
+# AmpliFi services. Caddy obtains and renews TLS certs automatically.
+#
+#   docker run -p 80:80 -p 443:443 -v $PWD/infra/caddy/Caddyfile:/etc/caddy/Caddyfile caddy
+#
+# Replace the domains with yours and point DNS at the host.
+
+(secure_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+}
+
+pricing.amplifi.example {
+	import secure_headers
+	reverse_proxy pricing-api:80
+}
+
+risk.amplifi.example {
+	import secure_headers
+	reverse_proxy risk-engine:80
+}

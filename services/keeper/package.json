@@ -15,7 +15,8 @@
   },
   "dependencies": {
     "@amplifi/strategy-core": "0.1.0",
-    "@amplifi/svc-kit": "0.1.0"
+    "@amplifi/svc-kit": "0.1.0",
+    "viem": "^2.21.45"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",

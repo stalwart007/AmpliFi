@@ -1,0 +1,40 @@
+name: cd
+
+# Build and publish service container images to GHCR on a version tag.
+# Deployment to a cluster is intentionally a manual/gated step (kubectl apply
+# infra/k8s) — promoting to an environment that custodies funds must not be a
+# silent auto-deploy.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [pricing-api, risk-engine, keeper]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push ${{ matrix.service }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/amplifi-${{ matrix.service }}:latest
+            ghcr.io/${{ github.repository_owner }}/amplifi-${{ matrix.service }}:${{ github.ref_name }}

@@ -11,6 +11,7 @@
 
 import { createServer, type Server } from "node:http";
 import { ValidationError } from "./validate";
+import { Metrics } from "./metrics";
 
 export interface Ctx {
   method: string;
@@ -50,6 +51,12 @@ export interface ServerOptions {
   rateLimit?: { windowMs: number; max: number };
   /** Per-request access log sink (wire your logger here). */
   log?: (line: AccessLogLine) => void;
+  /** If provided, per-request counters/latency are recorded into it. */
+  metrics?: Metrics;
+  /** Expose GET /metrics (Prometheus text). Public (not auth-gated). */
+  exposeMetrics?: boolean;
+  /** Readiness probe for GET /ready; returns 200 when true, 503 when false. */
+  readyCheck?: () => boolean;
 }
 
 const DEFAULT_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"];
@@ -103,10 +110,25 @@ export function createJsonServer(opts: ServerOptions): Server {
         "access-control-allow-headers": "content-type,authorization,x-api-key",
       });
       res.end(payload);
-      opts.log?.({ method: req.method ?? "GET", path: url.pathname, status, ms: Date.now() - started, ip });
+      const ms = Date.now() - started;
+      opts.log?.({ method: req.method ?? "GET", path: url.pathname, status, ms, ip });
+      opts.metrics?.inc("http_requests_total", { method: req.method ?? "GET", path: url.pathname, status: String(status) });
+      opts.metrics?.observe("http_request_duration_ms", ms, { path: url.pathname });
     };
 
     if (req.method === "OPTIONS") return send(204, {});
+
+    // Observability endpoints — public, before auth/rate-limit.
+    if (req.method === "GET" && url.pathname === "/metrics" && opts.exposeMetrics) {
+      const body = (opts.metrics ?? new Metrics()).render();
+      res.writeHead(200, { "content-type": "text/plain; version=0.0.4" });
+      res.end(body);
+      return;
+    }
+    if (req.method === "GET" && url.pathname === "/ready") {
+      const ready = opts.readyCheck ? opts.readyCheck() : true;
+      return send(ready ? 200 : 503, { ready });
+    }
 
     // Rate limit before doing any work.
     if (overLimit(ip)) return send(429, { error: "rate limit exceeded" });
@@ -169,17 +191,26 @@ export const ok = (body: unknown): Reply => ({ status: 200, body });
  *   AMPLIFI_RATE_WINDOW_MS  window length (default 60_000)
  * Defaults are safe for local dev (auth + rate-limit off, JSON access log on).
  */
-export function securityFromEnv(): Pick<ServerOptions, "apiKeys" | "rateLimit" | "publicPaths" | "log"> {
+export function securityFromEnv(): Pick<
+  ServerOptions,
+  "apiKeys" | "rateLimit" | "publicPaths" | "log" | "metrics" | "exposeMetrics" | "readyCheck"
+> {
   const apiKeys = (process.env.AMPLIFI_API_KEYS ?? "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
   const max = Number(process.env.AMPLIFI_RATE_MAX ?? "0");
   const windowMs = Number(process.env.AMPLIFI_RATE_WINDOW_MS ?? "60000");
+  const metrics = new Metrics();
+  metrics.setHelp("http_requests_total", "Total HTTP requests by method/path/status");
+  metrics.setHelp("http_request_duration_ms", "HTTP request duration in ms (sum/count)");
   return {
     apiKeys: apiKeys.length > 0 ? apiKeys : undefined,
     rateLimit: max > 0 ? { max, windowMs } : undefined,
-    publicPaths: ["/health"],
+    publicPaths: ["/health", "/metrics", "/ready"],
     log: (l) => console.log(JSON.stringify({ t: new Date().toISOString(), ...l })),
+    metrics,
+    exposeMetrics: true,
+    readyCheck: () => true,
   };
 }

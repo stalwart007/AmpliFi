@@ -1,0 +1,123 @@
+# AmpliFi reference Kubernetes manifests (testnet/staging).
+# Images are built by the CD workflow and pushed to GHCR. Secrets (API keys,
+# keeper key) come from the `amplifi-secrets` Secret — never bake them into images.
+#
+#   kubectl create secret generic amplifi-secrets \
+#     --from-literal=api-keys=key1,key2 --from-literal=keeper-key=0x...
+#   kubectl apply -f infra/k8s/services.yaml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pricing-api
+  labels: { app: pricing-api }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: pricing-api } }
+  template:
+    metadata:
+      labels: { app: pricing-api }
+    spec:
+      containers:
+        - name: pricing-api
+          image: ghcr.io/stalwart007/amplifi-pricing-api:latest
+          ports: [{ containerPort: 8801 }]
+          env:
+            - { name: PORT, value: "8801" }
+            - { name: AMPLIFI_RATE_MAX, value: "120" }
+            - name: AMPLIFI_API_KEYS
+              valueFrom: { secretKeyRef: { name: amplifi-secrets, key: api-keys } }
+          readinessProbe:
+            httpGet: { path: /ready, port: 8801 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: 8801 }
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+---
+apiVersion: v1
+kind: Service
+metadata: { name: pricing-api }
+spec:
+  selector: { app: pricing-api }
+  ports: [{ port: 80, targetPort: 8801 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: risk-engine
+  labels: { app: risk-engine }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: risk-engine } }
+  template:
+    metadata:
+      labels: { app: risk-engine }
+    spec:
+      containers:
+        - name: risk-engine
+          image: ghcr.io/stalwart007/amplifi-risk-engine:latest
+          ports: [{ containerPort: 8802 }]
+          env:
+            - { name: PORT, value: "8802" }
+            - { name: AMPLIFI_RATE_MAX, value: "120" }
+            - name: AMPLIFI_API_KEYS
+              valueFrom: { secretKeyRef: { name: amplifi-secrets, key: api-keys } }
+          readinessProbe:
+            httpGet: { path: /ready, port: 8802 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: 8802 }
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+---
+apiVersion: v1
+kind: Service
+metadata: { name: risk-engine }
+spec:
+  selector: { app: risk-engine }
+  ports: [{ port: 80, targetPort: 8802 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keeper
+  labels: { app: keeper }
+spec:
+  replicas: 1 # singleton agent; leader election needed before scaling > 1
+  selector: { matchLabels: { app: keeper } }
+  template:
+    metadata:
+      labels: { app: keeper }
+    spec:
+      containers:
+        - name: keeper
+          image: ghcr.io/stalwart007/amplifi-keeper:latest
+          env:
+            - { name: NODE_ENV, value: "production" }
+            - name: KEEPER_PRIVATE_KEY
+              valueFrom: { secretKeyRef: { name: amplifi-secrets, key: keeper-key } }
+            - name: RPC_URL
+              valueFrom: { secretKeyRef: { name: amplifi-secrets, key: rpc-url } }
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false

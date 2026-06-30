@@ -91,4 +91,36 @@ contract AllowlistGateTest is Test {
         gate.pause();
         assertFalse(gate.isAllowed(user));
     }
+
+    // ── fuzz ──────────────────────────────────────────────────────────────
+
+    /// Any address the gatekeeper allows is admitted; a finite expiry fails
+    /// closed after it passes.
+    function testFuzz_directAllowAndExpiry(address a, uint64 ttl) public {
+        vm.assume(a != address(0));
+        uint256 expiry = ttl == 0 ? 0 : block.timestamp + ttl;
+        vm.prank(gk);
+        gate.setAllowed(a, true, expiry);
+        assertTrue(gate.isAllowed(a));
+        if (expiry != 0) {
+            vm.warp(uint256(expiry) + 1);
+            assertFalse(gate.isAllowed(a), "expired entry still allowed");
+        }
+    }
+
+    /// Only the gatekeeper (or admin, who also holds the role) can allowlist.
+    function testFuzz_onlyGatekeeperAllows(address caller, address a) public {
+        vm.assume(caller != gk && caller != admin && a != address(0));
+        vm.prank(caller);
+        vm.expectRevert();
+        gate.setAllowed(a, true, 0);
+    }
+
+    /// A never-enrolled address is never allowed while the gate is required.
+    function testFuzz_unknownDenied(address a) public view {
+        vm.assume(a != address(0));
+        // gk/admin are enrolled in setUp via roles, not as allowed addresses,
+        // so isAllowed is purely about the allowlist mapping here.
+        assertFalse(gate.isAllowed(a));
+    }
 }
