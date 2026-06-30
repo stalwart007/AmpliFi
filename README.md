@@ -10,11 +10,6 @@ truth — a deterministic, dependency-free quant core that every other layer
 consumes — so the numbers a user sees, the risk a keeper enforces, and the
 parameters that govern the contracts are computed by the _same_ tested code.
 
-[![ci](https://img.shields.io/badge/ci-typecheck%20%2B%20verify-blue)](./.github/workflows/ci.yml)
-[![status](https://img.shields.io/badge/status-testnet--grade%20·%20audit%20pending-orange)](./PRODUCTION_READINESS.md)
-[![types](https://img.shields.io/badge/TypeScript-strict-blue)](#)
-
-
 ## Component status (read this first)
 
 Every component states plainly how far it has been taken. Run `npm test` for the
