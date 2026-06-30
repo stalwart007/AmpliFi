@@ -235,8 +235,6 @@ npm run compile        # solc 0.8.24 against OpenZeppelin 5.1 (this repo's check
 forge test             # full behavioural + fuzz suite (requires Foundry)
 ```
 
-Before mainnet: complete the audit and venue integration in
-[`PRODUCTION_READINESS.md`](./PRODUCTION_READINESS.md).
 
 ## License
 
