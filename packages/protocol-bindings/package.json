@@ -25,8 +25,8 @@
     "build": "tsc -p tsconfig.build.json"
   },
   "devDependencies": {
-    "@types/node": "^22.9.0",
+    "@types/node": "^26.0.1",
     "tsx": "^4.19.2",
-    "typescript": "^5.6.3"
+    "typescript": "^6.0.3"
   }
 }

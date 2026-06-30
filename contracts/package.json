@@ -9,7 +9,7 @@
     "test": "node compile.mjs"
   },
   "devDependencies": {
-    "@openzeppelin/contracts": "5.1.0",
-    "solc": "0.8.24"
+    "@openzeppelin/contracts": "5.6.1",
+    "solc": "0.8.35"
   }
 }
