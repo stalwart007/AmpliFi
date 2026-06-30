@@ -1,0 +1,26 @@
+{
+  "name": "@amplifi/quant-core",
+  "version": "0.1.0",
+  "description": "Deterministic, dependency-free quant core: Black-Scholes greeks, implied vol, SVI surface, full-revaluation Monte-Carlo VaR.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx test/verify.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}

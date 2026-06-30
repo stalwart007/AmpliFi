@@ -1,0 +1,15 @@
+{
+  "name": "@amplifi/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AmpliFi on-chain protocol: ERC-4626 vault + RiskController + options-venue integration seam (Solidity).",
+  "license": "UNLICENSED",
+  "scripts": {
+    "compile": "node compile.mjs",
+    "test": "node compile.mjs"
+  },
+  "devDependencies": {
+    "@openzeppelin/contracts": "5.1.0",
+    "solc": "0.8.24"
+  }
+}
