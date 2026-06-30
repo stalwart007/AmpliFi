@@ -19,8 +19,8 @@
     "format:write": "prettier --write \"{packages,services,apps}/**/*.{ts,tsx,json,md}\" \"*.{json,md}\""
   },
   "devDependencies": {
-    "@eslint/js": "^9.15.0",
-    "eslint": "^9.15.0",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.6.0",
     "prettier": "^3.3.3",
     "typescript-eslint": "^8.15.0"
   }
