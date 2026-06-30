@@ -37,31 +37,29 @@ prototype's core confusion; a shared core removes it by construction.
 ```
 amplifi/
 ├── packages/                      # shared, framework-agnostic libraries
-│   ├── quant-core/                # ✅ BUILT — pricing, surface, risk (pure TS)
-│   ├── strategy-core/             # ⏳ exposure/rebalance/wind-down state machine
-│   ├── market-data/               # ⏳ feed adapters + normalisation + cache
-│   ├── protocol-bindings/         # ⏳ typed ABIs + viem clients (codegen)
-│   └── shared-types/              # ⏳ cross-cutting domain types + zod schemas
+│   ├── quant-core/                # BUILT — pricing, surface, risk (pure TS)
+│   ├── strategy-core/             # exposure/rebalance/wind-down state machine
+│   ├── market-data/               # feed adapters + normalisation + cache
+│   ├── protocol-bindings/         # typed ABIs + viem clients (codegen)
+│   └── shared-types/              # cross-cutting domain types + zod schemas
 │
 ├── services/                      # deployable runtime processes
-│   ├── pricing-api/               # ⏳ HTTP/WS: greeks, IV, surface, marks
-│   ├── risk-engine/               # ⏳ scheduled VaR/ES, limit checks, alerts
-│   ├── alpha-service/             # ⏳ (hardened from prototype server/) signals
-│   ├── keeper/                    # ⏳ off-chain agent: rolls, hedges, epochs
-│   └── gateway/                   # ⏳ BFF/aggregation + auth for the front-end
+│   ├── pricing-api/               # HTTP/WS: greeks, IV, surface, marks
+│   ├── risk-engine/               # scheduled VaR/ES, limit checks, alerts
+│   ├── alpha-service/             # (hardened from prototype server/) signals
+│   ├── keeper/                    # off-chain agent: rolls, hedges, epochs
+│   └── gateway/                   # BFF/aggregation + auth for the front-end
 │
 ├── apps/
-│   ├── terminal/                  # ⏳ (from prototype app/) trading dashboard
-│   └── research/                  # ⏳ notebooks/CLI over quant-core + backtests
+│   ├── terminal/                  # (from prototype app/) trading dashboard
+│   └── research/                  # notebooks/CLI over quant-core + backtests
 │
-├── onchain/                       # ⏳ (from prototype) Foundry: vault + mocks
-├── contracts/                     # ⏳ (from prototype) reference strategy suite
+├── onchain/                       # (from prototype) Foundry: vault + mocks
+├── contracts/                     # (from prototype) reference strategy suite
 │
-├── infra/                         # ⏳ docker-compose, migrations, CI, IaC
+├── infra/                         # docker-compose, migrations, CI, IaC
 └── ARCHITECTURE.md                # this file
 ```
-
-Legend: ✅ built & verified · ⏳ planned/in-progress.
 
 ## 3. The quant core (built)
 
@@ -118,7 +116,7 @@ user-action funnel through the gateway.
 
 ## 5. Build order (roadmap)
 
-1. **quant-core** ✅ — done & verified (this commit).
+1. **quant-core** — done & verified (this commit).
 2. **shared-types + market-data** — domain schemas (zod) and a feed adapter with
    a replayable historical cache so everything downstream is testable offline.
 3. **strategy-core** — the exposure/rebalance/wind-down state machine, ported
@@ -147,4 +145,4 @@ user-action funnel through the gateway.
 
 ---
 
-_This is a research prototype. Unaudited. Not investment advice. Testnet only._
+
