@@ -7,9 +7,6 @@ off-chain deterministic strategy engine ("TimeMachine") with a permissioned
 ERC-4626 vault, a private signed-price oracle, and a modular DeFi integration
 layer.
 
-> Unaudited. Permissioned (allowlist), for testnet / mainnet-fork use only — not
-> for real funds.
-
 ## Repository
 
 - `packages/` — TypeScript libraries: `quant-core` (pricing/greeks/IV/SVI/Heston/
