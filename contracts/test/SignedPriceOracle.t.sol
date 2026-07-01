@@ -32,7 +32,6 @@ contract SignedPriceOracleTest is Test {
 
     function testWrongSignerRejected() public {
         uint256 ts = block.timestamp;
-        vm.expectRevert();
         // Precompute the signature BEFORE expectRevert: _sign() makes an external
         // call to oracle.hashUpdate(), and vm.expectRevert() binds to the next
         // external call — so the signature must be built ahead of it.
