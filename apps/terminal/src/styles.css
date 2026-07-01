@@ -1506,6 +1506,16 @@ code {
   color: var(--muted);
 }
 
+/* ───────── live vault ───────── */
+.live-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--green);
+  font-family: var(--mono);
+}
+
 /* ───────── wallet io blocks ───────── */
 .io-block {
   display: flex;

@@ -18,6 +18,37 @@ leveraged, capped-downside exposure through an external options venue.
 | `mocks/MockOptionsVenue` | Test/testnet implementation of `IOptionsVenue`. |
 | `mocks/MockUSDC` | 6-decimal mock stablecoin with a faucet (test/testnet). |
 
+### Integration adapters (`src/integrations/`)
+
+Reference (unaudited) adapters behind narrow seams, **decoupled from the vault's
+custody core** — binding any of them is a governance + audit decision:
+
+| Seam | Adapters | Covers |
+|------|----------|--------|
+| `IYieldSource` | `AaveV3YieldSource`, `ERC4626YieldSource` | Aave v3, Ethena (sUSDe), any ERC-4626 vault (Morpho/Yearn); idle-reserve yield via `YieldRouter` |
+| `ISwapRouter` | `SushiSwapAdapter`, `ZeroExSwapAdapter` | Sushi + 0x routing; `RebalanceRouter` executes keeper-computed rebalances |
+| `IRestakingModule` | `EigenLayerRestakeAdapter` | EigenLayer restaking exposure (LSTs) |
+| `IBridgeAdapter` | `BridgeAdapter` | cross-chain (CCTP / LayerZero-shaped seam) |
+| `IYieldTokenizer` | `PendleYieldTokenizer` | Pendle PT/YT yield tokenization (seam) |
+
+Hyperliquid is an off-chain L1 perp venue — integrated keeper-side, not as a
+Solidity adapter.
+
+**Deploy + bind** (best on a mainnet fork, where every protocol exists at its
+real address):
+
+```bash
+anvil --fork-url $MAINNET_RPC           # real contracts, fake money
+# in another shell — set the real protocol addresses, then:
+forge script script/DeployTestnet.s.sol:DeployTestnet --rpc-url http://127.0.0.1:8545 --broadcast --private-key $ANVIL_PK
+forge script script/DeployIntegrations.s.sol:DeployIntegrations --rpc-url http://127.0.0.1:8545 --broadcast --private-key $ANVIL_PK
+```
+
+`DeployIntegrations` deploys only the adapters whose env addresses are set
+(`ASSET`, `AAVE_POOL`/`AAVE_ATOKEN`, `YIELD_VAULT`, `SUSHI_ROUTER`/`ZEROX_PROXY`,
+`EIGEN_MANAGER`/`EIGEN_STRATEGY`/`LST`). Verify all addresses against each
+protocol's official docs.
+
 ## Design: the vault never invents returns
 
 NAV is computed as:

@@ -14,6 +14,7 @@ import type { WalletState } from "./wallet";
 import { VAULT_ADDRESS, AFI_TOKEN_ADDRESS, shortAddr } from "./wallet";
 import { HeroChart, DrawdownChart, Histogram, Donut, Heatmap, Gauge, StackedBar, HBars, Sparkline, fmtUsd, fmtNum, fmtPct, type HeroSeries } from "./viz";
 import { MarketsPanel } from "./markets";
+import { LiveVaultPanel } from "./livePanel";
 
 export interface PanelCtx {
   snap: Snapshot;
@@ -566,6 +567,7 @@ export interface PanelDef {
 }
 
 export const PANELS: PanelDef[] = [
+  { id: "live", title: "Live Vault (on-chain)", region: "left", render: () => <LiveVaultPanel /> },
   { id: "wallet", title: "Wallet", region: "left", render: (c) => <WalletPanel c={c} /> },
   { id: "ops", title: "Operations", region: "left", render: (c) => <OperationsPanel c={c} /> },
   { id: "tokens", title: "Exposure Universe", region: "left", render: (c) => <TokenSelector c={c} /> },
