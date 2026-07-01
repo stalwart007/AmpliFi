@@ -33,35 +33,45 @@ contract SignedPriceOracleTest is Test {
     function testWrongSignerRejected() public {
         uint256 ts = block.timestamp;
         vm.expectRevert();
-        oracle.submitPrice(2000e8, ts, 1, _sign(2000e8, ts, 1, 0xBAD)); // not the signer
+        // Precompute the signature BEFORE expectRevert: _sign() makes an external
+        // call to oracle.hashUpdate(), and vm.expectRevert() binds to the next
+        // external call — so the signature must be built ahead of it.
+        bytes memory sig = _sign(2000e8, ts, 1, 0xBAD); // not the signer
+        vm.expectRevert(SignedPriceOracle.BadSigner.selector);
+        oracle.submitPrice(2000e8, ts, 1, sig);
     }
 
     function testReplayRejected() public {
         uint256 ts = block.timestamp;
         oracle.submitPrice(2000e8, ts, 1, _sign(2000e8, ts, 1, signerKey));
-        vm.expectRevert(); // nonce 1 already used → expects nonce 2
-        oracle.submitPrice(2000e8, ts, 1, _sign(2000e8, ts, 1, signerKey));
+        bytes memory sig = _sign(2000e8, ts, 1, signerKey);
+        // nonce 1 already used → contract expects nonce 2
+        vm.expectRevert(abi.encodeWithSelector(SignedPriceOracle.BadNonce.selector, 1, 2));
+        oracle.submitPrice(2000e8, ts, 1, sig);
     }
 
     function testStaleRejected() public {
         vm.warp(10 days);
         uint256 ts = block.timestamp - 2 hours; // older than 1h maxStaleness
-        vm.expectRevert();
-        oracle.submitPrice(2000e8, ts, 1, _sign(2000e8, ts, 1, signerKey));
+        bytes memory sig = _sign(2000e8, ts, 1, signerKey);
+        vm.expectRevert(abi.encodeWithSelector(SignedPriceOracle.StaleUpdate.selector, ts));
+        oracle.submitPrice(2000e8, ts, 1, sig);
     }
 
     function testFutureRejected() public {
         uint256 ts = block.timestamp + 1;
-        vm.expectRevert();
-        oracle.submitPrice(2000e8, ts, 1, _sign(2000e8, ts, 1, signerKey));
+        bytes memory sig = _sign(2000e8, ts, 1, signerKey);
+        vm.expectRevert(abi.encodeWithSelector(SignedPriceOracle.FutureUpdate.selector, ts));
+        oracle.submitPrice(2000e8, ts, 1, sig);
     }
 
     function testDeviationBounded() public {
         uint256 ts = block.timestamp;
         oracle.submitPrice(2000e8, ts, 1, _sign(2000e8, ts, 1, signerKey));
         // +50% jump exceeds the 10% bound
-        vm.expectRevert();
-        oracle.submitPrice(3000e8, ts, 2, _sign(3000e8, ts, 2, signerKey));
+        bytes memory bigJump = _sign(3000e8, ts, 2, signerKey);
+        vm.expectRevert(abi.encodeWithSelector(SignedPriceOracle.DeviationTooLarge.selector, 3000e8, 2000e8));
+        oracle.submitPrice(3000e8, ts, 2, bigJump);
         // +5% is fine
         oracle.submitPrice(2100e8, ts, 2, _sign(2100e8, ts, 2, signerKey));
         (uint256 p, ) = oracle.latestAnswer();
